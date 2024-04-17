@@ -2,12 +2,14 @@ package com.example.application.views.login;
 
 import com.example.application.service.AuthService;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.security.authentication.BadCredentialsException;
 import com.vaadin.flow.component.button.Button;
@@ -19,24 +21,27 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
     private final AuthService authService;
 
-    private EmailField emailField;
-    private PasswordField passwordField;
+    LoginForm login = new LoginForm();
 
-    private Button login;
+
     private Button register;
 
     public LoginView(AuthService authService){
+
+        System.out.println("\n\n\n\n\n\nkhugj"+VaadinSession.getCurrent().getSession().getAttribute("email"));
         this.authService = authService;
-        this.emailField = new EmailField("email");
-        emailField.setPlaceholder("Email");
-        passwordField = new PasswordField("password");
-        passwordField.setPlaceholder("Password");
 
-        login = new Button("Login");
+        login.setClassName("Login");
+        login.setAction("login");
+        addClassName("login-view");
+        setSizeFull();
+        setAlignItems(Alignment.CENTER);
+        setJustifyContentMode(JustifyContentMode.CENTER);
 
-        login.addClickListener( e -> {
+
+        login.addLoginListener( e -> {
             try {
-                authService.login(emailField.getValue(), passwordField. getValue());
+                authService.login(e.getUsername(), e.getPassword());
                 Notification.show("successfully login");
                 UI.getCurrent().navigate("dashboard");
             }catch (Exception exception){
@@ -49,11 +54,23 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
             UI.getCurrent().navigate("register");
         });
 
-        add(emailField, passwordField, login, register);
+        add(login, register);
 
     }
     @Override
     public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
+        if (VaadinSession.getCurrent().getSession().getAttribute("email") != null){
+            System.out.println("its works2");
+            beforeEnterEvent.forwardTo("main");
+
+        }
+
+        if(beforeEnterEvent.getLocation()
+                .getQueryParameters()
+                .getParameters()
+                .containsKey("error")) {
+            login.setError(true);
+        }
 
     }
 }

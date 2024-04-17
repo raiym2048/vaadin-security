@@ -22,6 +22,7 @@ import com.vaadin.flow.component.select.Select;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.theme.lumo.LumoUtility.BoxSizing;
 import com.vaadin.flow.theme.lumo.LumoUtility.FontSize;
 import com.vaadin.flow.theme.lumo.LumoUtility.FontWeight;
@@ -36,6 +37,8 @@ import jakarta.annotation.security.PermitAll;
 public class DashboardView extends Main {
 
     public DashboardView() {
+
+        System.out.println(VaadinSession.getCurrent().getSession().getAttribute("email"));
         addClassName("dashboard-view");
 
         Board board = new Board();

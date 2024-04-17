@@ -13,7 +13,7 @@ import jakarta.annotation.security.PermitAll;
 
 @PageTitle("Empty")
 @Route(value = "empty", layout = MainLayout.class)
-@RouteAlias(value = "", layout = MainLayout.class)
+@RouteAlias(value = "main", layout = MainLayout.class)
 @PermitAll
 public class EmptyView extends VerticalLayout {
 

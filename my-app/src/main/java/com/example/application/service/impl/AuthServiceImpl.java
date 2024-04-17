@@ -5,18 +5,18 @@ import com.example.application.enums.Role;
 import com.example.application.repo.UserRepository;
 import com.example.application.service.AuthService;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.textfield.EmailField;
-import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.router.NotFoundException;
 import com.vaadin.flow.server.VaadinSession;
-import org.apache.coyote.BadRequestException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -31,12 +31,39 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    public Optional<User> getUser(String username, String password) {
+        Optional<User> user;
+        try {
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                    username,
+                    password));
+
+            // Set the authentication result into the SecurityContext
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            user = userRepository.findByEmail(username);
+            if (user.isPresent()){
+                System.out.println("Success auth");
+            }
+
+
+
+        } catch (AuthenticationException e) {
+            System.out.println("Not success auth");
+
+            return Optional.empty();
+        }
+        return user;
+    }
+    @Override
     public void login(String emailField, String passwordField) {
         try {
             Authentication authentication =
                     authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                             emailField, passwordField
                     ));
+            VaadinSession.getCurrent().getSession().setAttribute("email", emailField);
+            VaadinSession.getCurrent().getSession().setAttribute("user", userRepository.findByEmail(emailField).get());
             VaadinSession.getCurrent().setAttribute(Authentication.class, authentication);
             VaadinSession.getCurrent().setAttribute("user", authentication.getPrincipal());
             SecurityContextHolder.getContext().setAuthentication(authentication);

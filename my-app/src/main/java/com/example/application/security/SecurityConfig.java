@@ -3,12 +3,16 @@ package com.example.application.security;
 import com.example.application.repo.UserRepository;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -26,11 +30,8 @@ import java.util.Arrays;
 @EnableWebSecurity
 @Configuration
 public class SecurityConfig  extends VaadinWebSecurity{
-    private final UserRepository repository;
-
-    public SecurityConfig(UserRepository repository) {
-        this.repository = repository;
-    }
+    @Autowired
+    private UserRepository repository;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -40,7 +41,7 @@ public class SecurityConfig  extends VaadinWebSecurity{
 
         // Icons from the line-awesome addon
         http.authorizeHttpRequests(authorize -> authorize
-                .requestMatchers(new AntPathRequestMatcher("/line-awesome//*.svg")).permitAll());
+                .requestMatchers(new AntPathRequestMatcher("/line-awesome/**/*.svg")).permitAll());
 
         http.formLogin().loginPage("/login").defaultSuccessUrl("/main").permitAll();
         http.logout().logoutUrl("/logout").logoutSuccessUrl("/login").invalidateHttpSession(true).permitAll();
@@ -64,6 +65,14 @@ public class SecurityConfig  extends VaadinWebSecurity{
     public UserDetailsService userDetailsService() {
         return email -> (UserDetails) repository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService());
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
     }
 
     @Bean
